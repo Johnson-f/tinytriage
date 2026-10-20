@@ -1,6 +1,8 @@
-# support-triage-finetune
+# tinytriage
 
 **A 1.5B open model, fine-tuned in 4 minutes for about $0.15, beats both Claude Sonnet 5.5 and Claude Haiku 5.5 at support-ticket triage. It scores 93.4% vs Sonnet's 83.4%, costs about 600× less per request than Sonnet and 29× less than Haiku, and responds about 3× faster. With confidence routing, it handles 81% of tickets automatically at 98.8% accuracy.**
+
+**Model on Hugging Face:** [johnsonfzzz/Qwen2.5-1.5B-Banking77-Intent](https://huggingface.co/johnsonfzzz/Qwen2.5-1.5B-Banking77-Intent) (merged model plus the LoRA adapter in `lora/`)
 
 This repo is the full pipeline behind that result: data preparation, LoRA fine-tuning on [Modal](https://modal.com), serving with [vLLM](https://github.com/vllm-project/vllm), an evaluation harness that scores any OpenAI-compatible endpoint, and a confidence-routing analysis.
 
@@ -96,6 +98,8 @@ data/
   prepare.py      split train/val/test, write JSONL, check test/train overlap
 finetune/
   train.py        Modal function: LoRA fine-tuning, saves adapter to a Modal Volume
+  publish.py      merges the adapter, sanity-checks it and uploads both to Hugging Face
+  MODEL_CARD.md   the Hugging Face model card
 serve/
   serve.py        Modal web server: vLLM with the base model and LoRA adapter
 eval/
@@ -178,6 +182,17 @@ for SPLIT in val test; do
 done
 uv run python eval/coverage.py --val qwen1.5b-finetuned-conf-val --test qwen1.5b-finetuned-conf-test
 ```
+
+### 7. Publish to Hugging Face (optional)
+
+Put a Hugging Face token with write access in `.env` as `HF_TOKEN=...`, then:
+
+```bash
+uv run --env-file .env modal run finetune/publish.py --repo-id <user>/<model-name>            # merge + sanity check only
+uv run --env-file .env modal run finetune/publish.py --repo-id <user>/<model-name> --upload   # also upload
+```
+
+The script refuses to upload if the merged model scores below 80% on a 20-message sanity check.
 
 ### Harness options
 

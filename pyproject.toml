@@ -1,5 +1,5 @@
 [project]
-name = "support-triage-finetune"
+name = "tinytriage"
 version = "0.1.0"
 description = "Fine-tune a small open model for support-ticket triage and benchmark it against frontier models on accuracy, cost and latency"
 authors = [
