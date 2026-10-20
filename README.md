@@ -1,6 +1,6 @@
 # support-triage-finetune
 
-**A 1.5B open model, fine-tuned in 4 minutes for about $0.15, beats Claude Haiku 5.5 on support-ticket triage. It is 17 points more accurate, about 29× cheaper per request and 3× faster. With confidence routing, it handles 81% of tickets automatically at 98.8% accuracy.**
+**A 1.5B open model, fine-tuned in 4 minutes for about $0.15, beats both Claude Sonnet 5.5 and Claude Haiku 5.5 at support-ticket triage. It scores 93.4% vs Sonnet's 83.4%, costs about 600× less per request than Sonnet and 29× less than Haiku, and responds about 3× faster. With confidence routing, it handles 81% of tickets automatically at 98.8% accuracy.**
 
 This repo is the full pipeline behind that result: data preparation, LoRA fine-tuning on [Modal](https://modal.com), serving with [vLLM](https://github.com/vllm-project/vllm), an evaluation harness that scores any OpenAI-compatible endpoint, and a confidence-routing analysis.
 
@@ -12,13 +12,13 @@ This repo is the full pipeline behind that result: data preparation, LoRA fine-t
 | Model | Accuracy | Invalid answers | Avg input tokens | p50 latency | p95 latency | Cost / 1k requests |
 |---|---|---|---|---|---|---|
 | **Qwen2.5-1.5B + LoRA (this repo)** | **93.4%** | 0.1% | 37 | 0.51s | 0.59s | **$0.0036** |
+| Claude Sonnet 5.5 | 83.4% | 2.1% | 818 | 1.48s | 2.17s | $2.1528 |
 | Claude Haiku 5.5 | 76.1% | 1.8% | 818 | 1.54s | 2.03s | $0.1055 |
-| Claude Sonnet 5.5 | *pending* | | | | | |
 | Qwen2.5-1.5B, not fine-tuned | 44.6% | 4.6% | 431 | 0.51s | 0.68s | $0.0044 |
 
 - Claude models were called through the [Perplexity Agent API](https://docs.perplexity.ai/docs/agent-api/models) with the full list of 77 labels in the prompt, with reasoning turned off and no web-search tools. Their costs are the per-request costs Perplexity reported.
 - The Qwen models were self-hosted on one NVIDIA L4 ($0.80/hr on Modal). Their cost is GPU time during the run, divided by the number of requests.
-- "Invalid" means the answer wasn't one of the 77 labels.
+- "Invalid" means the answer wasn't one of the 77 labels. For Sonnet, these were mostly explanations of why a message was ambiguous instead of a label. Sonnet sometimes even mentioned the Banking77 dataset by name.
 
 ### Confidence routing: automate the sure cases, send the rest to people
 
@@ -213,7 +213,8 @@ uv run python eval/coverage.py --val qwen1.5b-finetuned-conf-val --test qwen1.5b
 | LoRA training (L40S) | ~$0.15 of GPU time, plus a one-time image build and model download |
 | Serving and evaluation (L4) | < $1 |
 | Claude Haiku 5.5, full test set | ~$0.32 |
-| **Total excluding Sonnet** | **~$1–2** |
+| Claude Sonnet 5.5, full test set | ~$6.62 |
+| **Total** | **~$8–9** |
 
 ## Credits
 
