@@ -1,7 +1,7 @@
 [project]
-name = "demo"
+name = "support-triage-finetune"
 version = "0.1.0"
-description = "Add your description here"
+description = "Fine-tune a small open model for support-ticket triage and benchmark it against frontier models on accuracy, cost and latency"
 authors = [
     { name = "Johnson", email = "johnsonnifemi52@gmail.com" }
 ]
@@ -11,10 +11,3 @@ dependencies = [
     "modal>=1.6.2",
     "openai>=3.35.1",
 ]
-
-[project.scripts]
-demo = "demo:main"
-
-[build-system]
-requires = ["uv_build>=0.12.18,<0.13.0"]
-build-backend = "uv_build"
